@@ -10,7 +10,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
 
-	this.soundPool = new Array( );
+  this.soundPool = new Array( );
   this.setup();
 }
 
@@ -55,30 +55,40 @@ GameManager.prototype.setup = function () {
     this.addStartTiles();
   }
 
-	// sound stuff
-	this.soundPool.push({value:2, element:document.getElementById("s4a"), played:false});
-	this.soundPool.push({value:2, element:document.getElementById("s4b"), played:false});
-	//this.soundPool.push({name:"twosMergedB", element:tdocument.getElementById("s4"), played:false});
-	/* this isn't mixing properly
-	this.twosMergedA = document.createElement("audio");
-	document.body.appendChild(this.twosMergedA);
-	this.twosMergedA.setAttribute("src", "sound/4 calaudio.wav" );
-	this.twosMergedA.addEventListener("canplaythrough",GameManager.itemLoaded,false);
-	//
-	this.twosMergedB = document.createElement("audio");
-	document.body.appendChild(this.twosMergedB);
-	this.twosMergedB.setAttribute("src", "sound/4 calaudio.wav" );
-	this.twosMergedB.addEventListener("canplaythrough",GameManager.itemLoaded,false);
-	// grrerearerfafadf
-	window.setTimeout( function(){ opera.postError( "not ready" ); }, 1500 );
-	opera.postError( "ready" );*/
-
-  // Update the actuator
-  this.actuate();
+  this.addSounds();
 
   // Update the actuator
   this.actuate();
 };
+
+// extracted from setup; pushes soundfiles into pool
+GameManager.prototype.addSounds = function () {
+  this.soundPool.push({value:2,   element:document.getElementById("s4a"),   played:false});
+  this.soundPool.push({value:2,   element:document.getElementById("s4b"),   played:false});
+  this.soundPool.push({value:2,   element:document.getElementById("s4c"),   played:false});
+
+  this.soundPool.push({value:4,   element:document.getElementById("s8a"),   played:false});
+  this.soundPool.push({value:4,   element:document.getElementById("s8b"),   played:false});
+  this.soundPool.push({value:4,   element:document.getElementById("s8c"),   played:false});
+
+  this.soundPool.push({value:8,   element:document.getElementById("s16a"),   played:false});
+  this.soundPool.push({value:8,   element:document.getElementById("s16b"),   played:false});
+  this.soundPool.push({value:8,   element:document.getElementById("s16c"),   played:false});
+
+  this.soundPool.push({value:16,  element:document.getElementById("s32a"),  played:false});
+  this.soundPool.push({value:16,  element:document.getElementById("s32b"),  played:false});
+
+  this.soundPool.push({value:32,  element:document.getElementById("s64a"),  played:false});
+  this.soundPool.push({value:32,  element:document.getElementById("s64b"),  played:false});
+
+  this.soundPool.push({value:64,  element:document.getElementById("s128a"),  played:false});
+  this.soundPool.push({value:64,  element:document.getElementById("s128b"),  played:false});
+
+  this.soundPool.push({value:128, element:document.getElementById("s256a"), played:false});
+  this.soundPool.push({value:256, element:document.getElementById("s512a"), played:false});
+  this.soundPool.push({value:512, element:document.getElementById("s1024a"), played:false});
+  this.soundPool.push({value:1024, element:document.getElementById("s2048a"), played:false});
+}
 
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
@@ -188,8 +198,8 @@ GameManager.prototype.move = function (direction) {
           // Update the score
           self.score += merged.value;
 
-	// play a sound
-	self.playSound( tile.value, tile.y );
+          // play a sound
+          self.playSound( tile.value );
 
           // The mighty 2048 tile
           if (merged.value === 2048) self.won = true;
@@ -296,49 +306,24 @@ GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
 
-GameManager.prototype.playSound = function ( val, yv ) {
-	var ind = 0;
-	if ( val == 2 ) {//thSound.value == val) {
-		var thSound = this.soundPool[ ind ];
-		if ( ! thSound.played ) {
-			thSound.element.play();
-			this.soundPool[ ind ].played = true;
-			this.soundPool[ ind + 1 ].played = false;
-		} else {
-			ind = 1;
-			thSound.element.play();
-			this.soundPool[ ind ].played = true;
-			this.soundPool[ ind - 1 ].played = false;
-		}
-		opera.postError( "should play " + yv ); // yv just to distinguish
-	}	// I've hit the barrier that he predicted
-	/*var soundFound = false;
-	var soundIndex = 0;
-	var tempSound;
-	if (val == 2)
-	{
-		opera.postError( "a x" + this.soundPool[soundIndex].ended + " v" + this.soundPool[soundIndex].value);
-		while (!soundFound && soundIndex < this.soundPool.length) {
-			var tSound = this.soundPool[soundIndex];
-			if ((tSound.element.ended || !tSound.played) && tSound.value == val) {
-				soundFound = true;
-				tSound.played = true;
-			} else {
-				soundIndex++;
-			}
-		}
-		if (soundFound) {opera.postError( "should play" );
-			tempSound = this.soundPool[soundIndex].element;
-			tempSound.play();
-			opera.postError( "played @ " + val ); // NOT PORTABLE console
-		}
-	}*/
-}
-
-GameManager.prototype.itemLoaded = function ( event ) {
-opera.postError( "one is ready" );
-	this.twosMergedA.removeEventListener("canplaythrough",itemLoaded, false);
-	this.twosMergedB.removeEventListener("canplaythrough",itemLoaded, false);
-	this.soundPool.push({name:"twosMergedA", element:this.twosMergedA, played:false});
-	this.soundPool.push({name:"twosMergedB", element:this.twosMergedB, played:false});
+// plays sound from pool & updates ready flag
+GameManager.prototype.playSound = function ( val ) {
+  // perhaps start in multiple of val & less than group length?
+  for ( var ind = 0; ind < this.soundPool.length; ind++ )
+  {
+    var thSound = this.soundPool[ ind ];
+    if ( thSound.element.ended )
+    {  thSound.played = false;  }
+  }
+  var found = false;
+  for ( var ind = 0; ind < this.soundPool.length; ind++ ) {
+    var thSound = this.soundPool[ ind ];
+    if ( thSound.value == val && ! found ) {
+      if ( ! thSound.played ) {
+        thSound.played = true;
+        thSound.element.play();
+        found = true;
+      }
+    }
+  }
 }
